@@ -1,6 +1,9 @@
 module Lib
-    ( someFunc, helloWorld
+    ( repl, helloWorld
     ) where
+
+import           Control.Monad
+import qualified Exp           (Exp, parse, (***), (+++))
 
 -- |
 -- >>> helloWorld "Hay!"
@@ -8,5 +11,14 @@ module Lib
 helloWorld :: String -> String
 helloWorld = (++ " World!")
 
-someFunc :: IO ()
-someFunc = putStrLn $ helloWorld "Hello"
+repl :: IO ()
+repl = do
+    putStrLn ">"
+    str <- getLine
+    when (str `elem` ["q", "Q", "quit", "Quit", "QUIT"]) (return ())
+    case Exp.parse str of
+         Nothing -> repl
+         Just e -> do
+            print e
+            putStrLn ""
+            repl
