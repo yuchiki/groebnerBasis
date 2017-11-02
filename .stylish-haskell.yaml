@@ -12,6 +12,7 @@ steps:
 columns: 80
 language_extensions:
   - MultiParamTypeClasses
+  - TupleSections
   - FlexibleContexts
   - ExplicitForAll
   - TemplateHaskell

@@ -3,11 +3,9 @@ module Lib
     ) where
 
 import           Control.Monad
-import qualified Exp           (Exp, parse, (***), (+++))
+import qualified Exp
+                 (Exp, parse, (***), (+++))
 
--- |
--- >>> helloWorld "Hay!"
--- "Hay! World!"
 helloWorld :: String -> String
 helloWorld = (++ " World!")
 
