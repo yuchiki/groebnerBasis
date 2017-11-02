@@ -79,21 +79,21 @@ naturalP = read $-> ham (many1 digit)
 ham :: Parser a -> Parser a
 ham = (spaces *>) . (<* spaces)
 
--- | Add two Expressions
--- >>> parse' "a" +++ parse' "b"
--- a+b
+--- | Add two Expressions
+--- >>> parse' "a" +++ parse' "b"
+--- a+b
 (+++) :: Exp -> Exp -> Exp
 e1 +++ e2 = $(notImplemented)
 
--- |
--- >>> parse' "dead" *** parse' "beef"
--- abde^3f
+--- |
+--- >>> parse' "dead" *** parse' "beef"
+--- abde^3f
 (***) :: Exp -> Exp -> Exp
 e1 *** e2 = e1
 
--- |
--- >>> parse' "a+b ^ 2 "
--- a^2+2ab+b^2
+--- |
+--- >>> parse' "a+b ^ 2 "
+--- a^2+2ab+b^2
 (^^^) :: Exp -> Int -> Exp
 e ^^^ i = e
 
@@ -102,3 +102,6 @@ e ^^^ i = e
 -- a+b^2c
 parse :: String -> Either String Exp
 parse = either (Left . show) Right  . Parsec.parse topP []
+
+parse' :: String -> Exp
+parse' = (\(Right e) -> e) . Exp.parse
