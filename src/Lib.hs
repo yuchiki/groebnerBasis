@@ -15,8 +15,10 @@ repl = do
     str <- getLine
     when (str `elem` ["q", "Q", "quit", "Quit", "QUIT"]) (return ())
     case Exp.parse str of
-         Nothing -> repl
-         Just e -> do
+         Left e -> do
+            putStrLn e
+            repl
+         Right e -> do
             print e
             putStrLn ""
             repl
