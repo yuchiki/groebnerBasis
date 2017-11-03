@@ -106,8 +106,11 @@ flattenExp e = Map.unions $
                     map (\(p, i) -> Map.map (* i) (flattenProd p)) $ Map.toList e
 
 flattenProd :: Prod -> Exp
-flattenProd  p = foldr1 (***) $ concatMap (\(a, i) -> replicate i (flattenAtom a)) $ MultiSet.toOccurList p
+flattenProd  p = foldr (***) constOne $ concatMap (\(a, i) -> replicate i (flattenAtom a)) $ MultiSet.toOccurList p
 
 flattenAtom :: Atom -> Exp
 flattenAtom v@(AVar _) = Map.singleton (MultiSet.insertMany v 1 MultiSet.empty) 1
 flattenAtom (AExp e) = flattenExp e
+
+constOne :: Exp
+constOne = Map.singleton MultiSet.empty 1
