@@ -43,7 +43,7 @@ instance Show Atom where
 infixr 2 $->
 
 topP :: Parser Exp
-topP = expP <* eof
+topP = flattenExp $-> expP <* eof
 
 expP :: Parser Exp
 expP = do
@@ -100,3 +100,14 @@ parse = either (Left . show) Right  . Parsec.parse topP []
 
 _parse :: String -> Exp
 _parse = (\(Right e) -> e) . Exp.parse
+
+flattenExp :: Exp -> Exp
+flattenExp e = Map.unions $
+                    map (\(p, i) -> Map.map (* i) (flattenProd p)) $ Map.toList e
+
+flattenProd :: Prod -> Exp
+flattenProd  p = foldr1 (***) $ concatMap (\(a, i) -> replicate i (flattenAtom a)) $ MultiSet.toOccurList p
+
+flattenAtom :: Atom -> Exp
+flattenAtom v@(AVar _) = Map.singleton (MultiSet.insertMany v 1 MultiSet.empty) 1
+flattenAtom (AExp e) = flattenExp e
