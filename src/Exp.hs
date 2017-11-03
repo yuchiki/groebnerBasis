@@ -5,6 +5,7 @@ import           Data.List
 import qualified Data.Map                 as Map
 import           Data.Maybe
 import qualified Data.MultiSet            as MultiSet
+import           Data.Tuple
 import           Development.Placeholders
 import           Text.Parsec              as Parsec
 import           Text.Parsec.String
@@ -52,7 +53,7 @@ expP = do
     return $ Map.filter (> 0) . Map.fromListWith (+) $ t:ts
 
 termP :: Parser Term
-termP = try ((,) <$> prodP <*> naturalP)
+termP = try (swap <$> ((,) <$> naturalP <*> prodP))
         <|> try ((MultiSet.empty,) $-> naturalP)
         <|> (, 1) $-> prodP
 
