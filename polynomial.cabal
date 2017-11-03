@@ -37,7 +37,7 @@ executable polynomial-exe
 test-suite polynomial-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  other-modules:       LibSpec, ExpSpec
+  other-modules:       ExpSpec
   main-is:             Spec.hs
   build-depends:       base
                      , polynomial
