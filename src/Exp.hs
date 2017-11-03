@@ -1,5 +1,5 @@
 module Exp (
-    Exp, (+++), (***), (^^^), Exp.parse
+    Exp, (+++), (***), Exp.parse
 ) where
 import           Data.List
 import qualified Data.Map                 as Map
@@ -79,29 +79,24 @@ naturalP = read $-> ham (many1 digit)
 ham :: Parser a -> Parser a
 ham = (spaces *>) . (<* spaces)
 
---- | Add two Expressions
---- >>> parse' "a" +++ parse' "b"
---- a+b
+-- | Add two Expressions
+-- >>> _parse "a" +++ _parse "b"
+-- a+b
 (+++) :: Exp -> Exp -> Exp
-e1 +++ e2 = $(notImplemented)
-
---- |
---- >>> parse' "dead" *** parse' "beef"
---- abde^3f
-(***) :: Exp -> Exp -> Exp
-e1 *** e2 = e1
-
---- |
---- >>> parse' "a+b ^ 2 "
---- a^2+2ab+b^2
-(^^^) :: Exp -> Int -> Exp
-e ^^^ i = e
+(+++) = Map.unionWith (+)
 
 -- |
--- >>> parse' "b^2c+a"
+-- >>> _parse "dead" *** _parse "beef"
+-- abd^2e^3f
+(***) :: Exp -> Exp -> Exp
+e1 *** e2 = Map.fromList [(MultiSet.union p1 p2, i1 * i2) | (p1, i1) <- Map.toList e1,
+                                                            (p2, i2) <- Map.toList e2]
+
+-- |
+-- >>> _parse "b^2c+a"
 -- a+b^2c
 parse :: String -> Either String Exp
 parse = either (Left . show) Right  . Parsec.parse topP []
 
-parse' :: String -> Exp
-parse' = (\(Right e) -> e) . Exp.parse
+_parse :: String -> Exp
+_parse = (\(Right e) -> e) . Exp.parse
