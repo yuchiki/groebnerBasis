@@ -5,20 +5,18 @@ module Lib
 import           Control.Monad
 import qualified Exp
                  (Exp, parse, (***), (+++))
+import           System.IO
+import           Util
 
 helloWorld :: String -> String
 helloWorld = (++ " World!")
 
 repl :: IO ()
 repl = do
-    putStrLn ">"
+    putStr ">" ; hFlush stdout
     str <- getLine
     when (str `elem` ["q", "Q", "quit", "Quit", "QUIT"]) (return ())
     case Exp.parse str of
-         Left e -> do
-            putStrLn e
-            repl
-         Right e -> do
-            print e
-            putStrLn ""
-            repl
+         Left e -> putStrLn e
+         Right e -> printLn e
+    repl
