@@ -1,6 +1,7 @@
 module Exp (
     Exp, (+++), (***), Exp.parse
 ) where
+import           Data.Function
 import           Data.List
 import qualified Data.Map                 as Map
 import           Data.Maybe
@@ -30,6 +31,19 @@ instance {-# OVERLAPPING #-} Show Pow where
 instance Show Atom where
     show (AVar i) = [i]
     show (AExp e) = "(" ++ show e ++ ")"
+
+instance {-# OVERLAPPING #-} Ord Prod where
+    p1 <= p2 = on (<=?) MultiSet.toOccurList p1 p2
+        where
+            (<=?) :: [Pow] -> [Pow] -> Bool
+            _ <=? [] = True
+            [] <=? _ = False
+            ((a1, i1):pw1) <=? ((a2, i2):pw2)
+                | a1 < a2 = True
+                | a1 > a2 = False
+                | i1 > i2 = True
+                | i1 < i2 = False
+                | otherwise = pw1 <=? pw2
 
 {--
     exp  ::= term (+ term | - term)* eof
