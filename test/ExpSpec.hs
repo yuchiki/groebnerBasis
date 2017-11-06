@@ -32,9 +32,11 @@ spec = do
                 parshow "2a" `shouldBe` "2a"
             it "should show a+b^2 in correct order" $
                 parshow "a+b^2" `shouldBe` "b^2+a"
-        context "when negative term is given" $
+        context "when negative term is given" $ do
             it "should show -a" $
                 parshow "-a" `shouldBe` "-a"
+            it "should omit '+' before '-' " $
+                parshow "a-b" `shouldBe` "a-b"
 
 
 parshow :: String -> String

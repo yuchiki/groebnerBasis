@@ -23,9 +23,14 @@ data Atom = AVar Identifier | AExp Exp deriving(Eq, Ord)
 
 instance {-# OVERLAPPING #-} Show Exp where
     show e | e == Map.empty = "0"
-    show e = intercalate "+" . map show . Map.toList $ e
+    show e = foldl1 (\acc -> (acc ++) . addPlusSign) . map show . Map.toList $ e
+        where
+            addPlusSign :: String -> String
+            addPlusSign s@('-':_) = s
+            addPlusSign s = '+':s
 instance {-# OVERLAPPING #-} Show Term where
     show (p, i) | p == MultiSet.empty = showRational i
+    show (p, -1) = "-" ++ show p
     show (p, 1) = show p
     show (p, i) = showRational i ++ show p
 instance {-# OVERLAPPING #-} Show Prod where
@@ -136,7 +141,7 @@ e1 /// c = e1 *** constN (1 / c)
 
 -- |
 -- >>> _parse "b^2c+a"
--- a+b^2c
+-- b^2c + a
 parse :: String -> Either String Exp
 parse = either (Left . show) Right  . Parsec.parse topP []
 
