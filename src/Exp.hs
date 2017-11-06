@@ -43,11 +43,13 @@ showRational r
     | otherwise = show (numerator r) ++ "/" ++ show (denominator r)
 
 instance {-# OVERLAPPING #-} Ord Prod where
-    p1 <= p2 = on (<=?) MultiSet.toOccurList p1 p2
+    p1 <= p2
+        | on (<) MultiSet.size p1 p2 = False
+        | on (>) MultiSet.size p1 p2 = True
+        | otherwise = on (<=?) MultiSet.toOccurList p1 p2
         where
             (<=?) :: [Pow] -> [Pow] -> Bool
-            _ <=? [] = True
-            [] <=? _ = False
+            [] <=? [] = True
             ((a1, i1):pw1) <=? ((a2, i2):pw2)
                 | a1 < a2 = True
                 | a1 > a2 = False
@@ -119,12 +121,18 @@ ham = (spaces *>) . (<* spaces)
 (+++) :: Exp -> Exp -> Exp
 (+++) = Map.unionWith (+)
 
+(-:-) ::Exp -> Exp -> Exp
+e1 -:- e2 = e1 +++ (e2 *** constN (-1))
+
 -- |
 -- >>> _parse "dead" *** _parse "beef"
 -- abd^2e^3f
 (***) :: Exp -> Exp -> Exp
 e1 *** e2 = Map.fromListWith (+) [(MultiSet.union p1 p2, i1 * i2) | (p1, i1) <- Map.toList e1,
                                                             (p2, i2) <- Map.toList e2]
+
+(///) :: Exp -> Coef -> Exp
+e1 /// c = e1 *** constN (1 / c)
 
 -- |
 -- >>> _parse "b^2c+a"
@@ -151,3 +159,26 @@ constN = Map.singleton MultiSet.empty
 
 constOne :: Exp
 constOne = constN 1
+
+lc :: Exp -> Coef
+lc = snd . head . Map.toAscList
+
+lm :: Exp -> Prod
+lm = fst. head . Map.toAscList
+
+lcm :: Prod -> Prod -> Prod
+lcm = MultiSet.maxUnion
+
+divProd :: Prod -> Prod -> Prod
+divProd = MultiSet.difference
+
+
+-- |
+-- >>> on sExpression _parse "xy-1" "y^2+x"
+-- -x^2-y
+sExpression :: Exp -> Exp -> Exp
+sExpression e1 e2 = (e1 *** multiplier1) -:- (e2 *** multiplier2)
+    where
+        lcm0 =  on Exp.lcm lm e1 e2
+        multiplier1 = Map.singleton (lcm0 `divProd` lm e1) (1 / lc e1)
+        multiplier2 = Map.singleton (lcm0 `divProd` lm e2) (1 / lc e2)
