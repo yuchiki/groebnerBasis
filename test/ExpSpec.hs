@@ -14,8 +14,15 @@ spec = do
                 parshow "a(b+c)" `shouldBe` "ab+ac"
             it "should deal coefficient correctly" $
                 parshow "(a+b)^2" `shouldBe` "a^2+2ab+b^2"
+        context "when negative input" $
+            it "should parse" $
+                parshow "-1" `shouldBe` "-1"
     describe "show" $
         context "when 'na' is given" $ do
+            it "should show 1" $
+                parshow "1" `shouldBe` "1"
+            it "should show 0" $
+                parshow "0" `shouldBe` "0"
             it "should not show 1 in 1a" $
                 parshow "1a" `shouldBe` "a"
             it "should show 2 in 2a" $

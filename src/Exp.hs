@@ -63,7 +63,7 @@ topP = flattenExp $-> expP <* eof
 expP :: Parser Exp
 expP = do
     t <- termP
-    ts <- many (try (char '+' *> termP) <|> (\(p, n)-> (p, -n)) $-> char '-' *> termP)
+    ts <- many (try ((char '+' *> termP) <|> (\(p, n)-> (p, -n)) $-> char '-' *> termP))
     return $ Map.filter (> 0) . Map.fromListWith (+) $ t:ts
 
 termP :: Parser Term
