@@ -72,6 +72,11 @@ expP = do
 
 termP :: Parser Term
 termP = try (swap <$> ((,) <$> naturalP <*> prodP))
+        <|> try (do
+            n <- naturalP
+            char '^'
+            i <- naturalP
+            return (MultiSet.empty, n^i))
         <|> try ((MultiSet.empty,) $-> naturalP)
         <|> (, 1) $-> prodP
 
