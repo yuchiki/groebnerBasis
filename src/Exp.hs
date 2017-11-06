@@ -7,6 +7,7 @@ import qualified Data.Map                 as Map
 import           Data.Maybe
 import qualified Data.MultiSet            as MultiSet
 import           Data.Ratio
+import qualified Data.Set                 as Set
 import           Data.Tuple
 import           Development.Placeholders
 import           Text.Parsec              as Parsec
@@ -19,6 +20,9 @@ type Term = (Prod, Coef)
 type Prod = MultiSet.MultiSet Atom
 type Pow = (Atom, Int)
 data Atom = AVar Identifier | AExp Exp deriving(Eq, Ord)
+
+empty :: Exp
+empty = Map.empty
 
 
 instance {-# OVERLAPPING #-} Show Exp where
@@ -127,7 +131,7 @@ ham = (spaces *>) . (<* spaces)
 (+++) = Map.unionWith (+)
 
 (-:-) ::Exp -> Exp -> Exp
-e1 -:- e2 = e1 +++ (e2 *** constN (-1))
+e1 -:- e2 = Map.filter (/= 0) $ e1 +++ (e2 *** constN (-1))
 
 -- |
 -- >>> _parse "dead" *** _parse "beef"
@@ -171,12 +175,38 @@ lc = snd . head . Map.toAscList
 lm :: Exp -> Prod
 lm = fst. head . Map.toAscList
 
+lt :: Exp -> Term
+lt = head . Map.toAscList
+
 lcm :: Prod -> Prod -> Prod
 lcm = MultiSet.maxUnion
 
 divProd :: Prod -> Prod -> Prod
 divProd = MultiSet.difference
 
+divTerm :: Term -> Term -> Term
+divTerm (p1, c1) (p2, c2) = (divProd p1 p2, c1 / c2)
+
+(@|@) :: Prod  -> Prod -> Bool
+p1 @|@ p2 = Exp.lcm p1 p2 == p1
+
+(@%@) :: Exp -> Exp -> Exp
+e1 @%@ e2
+    | e2 == empty = error "second argument of @%@ must not be empty."
+    | e1 == empty = empty
+    | lm e1 @|@ lm e2 = e1' @%@ e2
+    | otherwise = uncurry Map.insert t (ts @%@ e2)
+        where
+            e1' = e1 -:- (uncurry Map.singleton (on divTerm lt e1 e2) ***e2)
+            (t, ts) = Map.deleteFindMin e1
+
+-- |
+-- >>> let a = _parse "x^2y+xy^2+y^2"
+-- >>> let s = Set.fromList . map _parse $ ["xy-1", "y^2-1"]
+-- >>> a @%@@ s
+-- x+y+1
+(@%@@) :: Exp -> Set.Set Exp -> Exp
+e @%@@ s = Set.foldl (@%@) e s
 
 -- |
 -- >>> on sExpression _parse "xy-1" "y^2+x"
