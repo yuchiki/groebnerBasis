@@ -6,14 +6,16 @@ import           Data.List
 import qualified Data.Map                 as Map
 import           Data.Maybe
 import qualified Data.MultiSet            as MultiSet
+import           Data.Ratio
 import           Data.Tuple
 import           Development.Placeholders
 import           Text.Parsec              as Parsec
 import           Text.Parsec.String
 
+type Coef = Rational
 type Identifier = Char
-type Exp = Map.Map Prod Int
-type Term = (Prod, Int)
+type Exp = Map.Map Prod Coef
+type Term = (Prod, Coef)
 type Prod = MultiSet.MultiSet Atom
 type Pow = (Atom, Int)
 data Atom = AVar Identifier | AExp Exp deriving(Eq, Ord)
@@ -23,9 +25,9 @@ instance {-# OVERLAPPING #-} Show Exp where
     show e | e == Map.empty = "0"
     show e = intercalate "+" . map show . Map.toList $ e
 instance {-# OVERLAPPING #-} Show Term where
-    show (p, i) | p == MultiSet.empty = show i
+    show (p, i) | p == MultiSet.empty = showRational i
     show (p, 1) = show p
-    show (p, i) = show i ++ show p
+    show (p, i) = showRational i ++ show p
 instance {-# OVERLAPPING #-} Show Prod where
     show = concatMap show . MultiSet.toOccurList
 instance {-# OVERLAPPING #-} Show Pow where
@@ -34,6 +36,11 @@ instance {-# OVERLAPPING #-} Show Pow where
 instance Show Atom where
     show (AVar i) = [i]
     show (AExp e) = "(" ++ show e ++ ")"
+
+showRational :: Rational -> String
+showRational r
+    | denominator r == 1 = show (numerator r)
+    | otherwise = show (numerator r) ++ "/" ++ show (denominator r)
 
 instance {-# OVERLAPPING #-} Ord Prod where
     p1 <= p2 = on (<=?) MultiSet.toOccurList p1 p2
@@ -71,13 +78,13 @@ expP = do
     return $ Map.filter (/= 0) . Map.fromListWith (+) $ t:ts
 
 termP :: Parser Term
-termP = try (swap <$> ((,) <$> naturalP <*> prodP))
+termP = try (swap <$> ((,) <$> rationalP <*> prodP))
         <|> try (do
-            n <- naturalP
+            n <- rationalP
             char '^'
             i <- naturalP
             return (MultiSet.empty, n^i))
-        <|> try ((MultiSet.empty,) $-> naturalP)
+        <|> try ((MultiSet.empty,) $-> rationalP)
         <|> (, 1) $-> prodP
 
 prodP :: Parser Prod
@@ -96,6 +103,9 @@ atomP :: Parser Atom
 atomP = ham $
             AVar $-> letter <|>
             AExp $-> char '(' *> expP <* char ')'
+
+rationalP :: Parser Rational
+rationalP = toRational <$> naturalP
 
 naturalP :: Parser Int
 naturalP = read $-> ham (many1 digit)
@@ -136,7 +146,7 @@ flattenAtom :: Atom -> Exp
 flattenAtom v@(AVar _) = Map.singleton (MultiSet.insertMany v 1 MultiSet.empty) 1
 flattenAtom (AExp e) = flattenExp e
 
-constN :: Int -> Exp
+constN :: Coef -> Exp
 constN = Map.singleton MultiSet.empty
 
 constOne :: Exp
