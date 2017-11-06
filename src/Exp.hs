@@ -104,7 +104,7 @@ ham = (spaces *>) . (<* spaces)
 -- >>> _parse "dead" *** _parse "beef"
 -- abd^2e^3f
 (***) :: Exp -> Exp -> Exp
-e1 *** e2 = Map.fromList [(MultiSet.union p1 p2, i1 * i2) | (p1, i1) <- Map.toList e1,
+e1 *** e2 = Map.fromListWith (+) [(MultiSet.union p1 p2, i1 * i2) | (p1, i1) <- Map.toList e1,
                                                             (p2, i2) <- Map.toList e2]
 
 -- |
