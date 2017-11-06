@@ -141,7 +141,7 @@ e1 /// c = e1 *** constN (1 / c)
 
 -- |
 -- >>> _parse "b^2c+a"
--- b^2c + a
+-- b^2c+a
 parse :: String -> Either String Exp
 parse = either (Left . show) Right  . Parsec.parse topP []
 
