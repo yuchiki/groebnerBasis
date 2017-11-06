@@ -17,6 +17,9 @@ spec = do
         context "when negative input" $
             it "should parse" $
                 parshow "-1" `shouldBe` "-1"
+        context "when power of constant value input" $
+            it "should parse" $
+                parshow "10^2" `shouldBe` "100"
     describe "show" $
         context "when 'na' is given" $ do
             it "should show 1" $
