@@ -18,8 +18,10 @@ type Prod = MultiSet.MultiSet Atom
 type Pow = (Atom, Int)
 data Atom = AVar Identifier | AExp Exp deriving(Eq, Ord)
 
+
 instance {-# OVERLAPPING #-} Show Exp where
-    show = intercalate "+" . map show . Map.toList
+    show e | e == Map.empty = "0"
+    show e = intercalate "+" . map show . Map.toList $ e
 instance {-# OVERLAPPING #-} Show Term where
     show (p, 1) = show p
     show (p, i) = show i ++ show p
@@ -64,7 +66,7 @@ expP :: Parser Exp
 expP = do
     t <- termP
     ts <- many (try ((char '+' *> termP) <|> (\(p, n)-> (p, -n)) $-> char '-' *> termP))
-    return $ Map.filter (> 0) . Map.fromListWith (+) $ t:ts
+    return $ Map.filter (/= 0) . Map.fromListWith (+) $ t:ts
 
 termP :: Parser Term
 termP = try (swap <$> ((,) <$> naturalP <*> prodP))
@@ -117,8 +119,8 @@ _parse :: String -> Exp
 _parse = (\(Right e) -> e) . Exp.parse
 
 flattenExp :: Exp -> Exp
-flattenExp e = Map.unions $
-                    map (\(p, i) -> Map.map (* i) (flattenProd p)) $ Map.toList e
+flattenExp e = Map.unionsWith (+) $
+                    map (\(p, i) -> constN i *** flattenProd p) $ Map.toList e
 
 flattenProd :: Prod -> Exp
 flattenProd  p = foldr (***) constOne $ concatMap (\(a, i) -> replicate i (flattenAtom a)) $ MultiSet.toOccurList p
@@ -127,5 +129,8 @@ flattenAtom :: Atom -> Exp
 flattenAtom v@(AVar _) = Map.singleton (MultiSet.insertMany v 1 MultiSet.empty) 1
 flattenAtom (AExp e) = flattenExp e
 
+constN :: Int -> Exp
+constN = Map.singleton MultiSet.empty
+
 constOne :: Exp
-constOne = Map.singleton MultiSet.empty 1
+constOne = constN 1
