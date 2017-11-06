@@ -23,6 +23,7 @@ instance {-# OVERLAPPING #-} Show Exp where
     show e | e == Map.empty = "0"
     show e = intercalate "+" . map show . Map.toList $ e
 instance {-# OVERLAPPING #-} Show Term where
+    show (p, i) | p == MultiSet.empty = show i
     show (p, 1) = show p
     show (p, i) = show i ++ show p
 instance {-# OVERLAPPING #-} Show Prod where
