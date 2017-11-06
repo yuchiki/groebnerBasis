@@ -30,6 +30,8 @@ spec = do
                 parshow "1a" `shouldBe` "a"
             it "should show 2 in 2a" $
                 parshow "2a" `shouldBe` "2a"
+            it "should show a+b^2 in correct order" $
+                parshow "a+b^2" `shouldBe` "b^2+a"
         context "when negative term is given" $
             it "should show -a" $
                 parshow "-a" `shouldBe` "-a"
