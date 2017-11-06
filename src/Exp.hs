@@ -177,7 +177,7 @@ divProd = MultiSet.difference
 -- >>> on sExpression _parse "xy-1" "y^2+x"
 -- -x^2-y
 sExpression :: Exp -> Exp -> Exp
-sExpression e1 e2 = (e1 *** multiplier1) -:- (e2 *** multiplier2)
+sExpression e1 e2 = Map.filter (/=0) $ (e1 *** multiplier1) -:- (e2 *** multiplier2)
     where
         lcm0 =  on Exp.lcm lm e1 e2
         multiplier1 = Map.singleton (lcm0 `divProd` lm e1) (1 / lc e1)

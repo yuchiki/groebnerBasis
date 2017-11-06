@@ -20,7 +20,7 @@ spec = do
         context "when power of constant value input" $
             it "should parse" $
                 parshow "10^2" `shouldBe` "100"
-    describe "show" $
+    describe "show" $ do
         context "when 'na' is given" $ do
             it "should show 1" $
                 parshow "1" `shouldBe` "1"
@@ -30,6 +30,9 @@ spec = do
                 parshow "1a" `shouldBe` "a"
             it "should show 2 in 2a" $
                 parshow "2a" `shouldBe` "2a"
+        context "when negative term is given" $
+            it "should show -a" $
+                parshow "-a" `shouldBe` "-a"
 
 
 parshow :: String -> String
