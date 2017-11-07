@@ -208,6 +208,10 @@ e1 @%@ e2
 (@%@@) :: Exp -> Set.Set Exp -> Exp
 e @%@@ s = Set.foldl (@%@) e s
 
+
+(@@%@) :: Set.Set Exp -> Exp -> Set.Set Exp
+s @@%@ e =Set.map (@%@ e) s
+
 -- |
 -- >>> on sExpression _parse "xy-1" "y^2+x"
 -- -x^2-y
@@ -217,3 +221,27 @@ sExpression e1 e2 = Map.filter (/=0) $ (e1 *** multiplier1) -:- (e2 *** multipli
         lcm0 =  on Exp.lcm lm e1 e2
         multiplier1 = Map.singleton (lcm0 `divProd` lm e1) (1 / lc e1)
         multiplier2 = Map.singleton (lcm0 `divProd` lm e2) (1 / lc e2)
+
+
+buchBerger :: Set.Set Exp -> Set.Set Exp
+buchBerger f = buchLoop f p
+    where p = Set.fromList [(f1, f2) | f1 <- Set.toList f, f2 <- Set.toList f, f1 /= f2]
+
+buchLoop :: Set.Set Exp -> Set.Set (Exp, Exp) -> Set.Set Exp
+buchLoop g p
+    | p == Set.empty = g
+    | otherwise = buchLoop next_g next_p
+    where
+        (expPair, p') = Set.deleteFindMin p
+        h = uncurry sExpression expPair @%@@ g
+        next_p = if h == empty then p' else  Set.union p' $ Set.fromList [(u, h) | u <- Set.toList g]
+        next_g = if h == empty then g else Set.insert h g
+
+reduce :: Set.Set Exp -> Set.Set Exp
+reduce f = foldr (\e acc -> let f' = normalizeCoef (Set.filter (/= Map.empty) $ Set.insert e (f @@%@ e)) in if f' == f then acc else reduce f') f f
+
+normalizeCoef :: Set.Set Exp -> Set.Set Exp
+normalizeCoef = Set.map (\e -> e /// lc e)
+
+reducedBasis :: Set.Set Exp -> Set.Set Exp
+reducedBasis = reduce . buchBerger
